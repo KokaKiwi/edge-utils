@@ -1,0 +1,42 @@
+[workspace]
+members = [
+  "fastly/opentelemetry",
+
+  "fastly/dev-server",
+  "fastly/demo-server",
+]
+default-members = [
+  "fastly/opentelemetry",
+
+  "fastly/dev-server",
+]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+license = "LicenseRef-OQL-1.3"
+
+[workspace.dependencies]
+axum = "0.8.8"
+base64 = "0.22.1"
+bon = "3.8.2"
+bytes = "1.11.0"
+clap = "4.5.56"
+fastly = "0.11.13"
+hyper014 = { version = "0.14", package = "hyper" }
+miette = "7.6.0"
+opentelemetry = "0.31.0"
+opentelemetry_sdk = { version = "0.31.0", default-features = false }
+opentelemetry-otlp = "0.31.0"
+opentelemetry-semantic-conventions = "0.31.0"
+redb = "3.1.0"
+serde = "1.0.228"
+serde_json = "1.0.149"
+thiserror = "2.0.18"
+tokio = "1.49.0"
+tracing = "0.1.44"
+tracing-opentelemetry = "0.32.1"
+tracing-subscriber = "0.3.22"
+viceroy-lib = "0.16.4"
+
+fastly-opentelemetry = { path = "fastly/opentelemetry" }

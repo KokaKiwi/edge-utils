@@ -1,0 +1,49 @@
+services:
+  clickhouse:
+    image: docker.io/clickhouse/clickhouse-server:latest-alpine
+    ports:
+      - 8123:8123/tcp
+      - 9000:9000/tcp
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: default
+      CLICKHOUSE_DB: default
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  ch-ui:
+    image: ghcr.io/caioricciuti/ch-ui:latest
+    ports:
+      - 5521:5521/tcp
+    environment:
+      VITE_CLICKHOUSE_URL: http://localhost:8123
+      VITE_CLICKHOUSE_USER: default
+      VITE_CLICKHOUSE_PASS: default
+      VITE_CLICKHOUSE_USE_ADVANCED: 'true'
+
+  otel-collector:
+    image: docker.io/otel/opentelemetry-collector-contrib:latest
+    depends_on:
+      - clickhouse
+    ports:
+      - 4317:4317
+      - 4318:4318
+    volumes:
+      - ./docker/otel-collector-config.yml:/etc/otelcol-contrib/config.yaml:ro
+
+  jaeger:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.14.0
+    depends_on:
+      - clickhouse
+    ports:
+      - 16686:16686/tcp
+    command: ['--config', '/jaeger/config.yml']
+    volumes:
+      - ./docker/jaeger-config.yml:/jaeger/config.yml:ro
+
+volumes:
+  clickhouse-data:

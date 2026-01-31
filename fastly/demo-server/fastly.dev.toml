@@ -1,0 +1,11 @@
+manifest_version = 3
+
+name = "fastly-demo-server"
+language = "rust"
+
+[scripts]
+build = """
+cargo build --package fastly-demo-server --target wasm32-wasip1
+mkdir -p ../../target/wasm32-wasip1/release
+cp ../../target/wasm32-wasip1/debug/fastly-demo-server.wasm ../../target/wasm32-wasip1/release/
+"""

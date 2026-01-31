@@ -1,0 +1,39 @@
+extensions:
+  jaeger_storage:
+    backends:
+      clickhouse_backend:
+        clickhouse:
+          addresses:
+            - clickhouse:9000
+          database: jaeger
+          auth:
+            basic:
+              username: default
+              password: default
+          create_schema: false
+  jaeger_query:
+    storage:
+      traces: clickhouse_backend
+    ui:
+      config_file: ''
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+exporters:
+  nop:
+
+service:
+  extensions:
+    - jaeger_storage
+    - jaeger_query
+
+  pipelines:
+    traces:
+      receivers:
+        - otlp
+      exporters:
+        - nop
