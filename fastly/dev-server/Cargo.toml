@@ -22,6 +22,7 @@ opentelemetry-semantic-conventions.workspace = true
 redb = { workspace = true, features = ["logging"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+serde_with = { workspace = true, features = ["base64"] }
 tokio = { workspace = true, features = ["full"] }
 tower = { workspace = true, features = ["full"] }
 tower-http = { workspace = true, features = ["full"] }
