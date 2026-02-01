@@ -1,15 +1,16 @@
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use clap::Parser;
 use miette::Result;
-
-use crate::context::Context;
+use tokio::sync::Notify;
 
 mod api;
 mod compute;
 mod context;
 mod trace;
+mod util;
 
 #[derive(Debug, Parser)]
 struct Options {
@@ -34,7 +35,13 @@ async fn main() -> Result<()> {
 
     let _guard = trace::setup_tracing();
 
-    let ctx = Context::new(&opts.store_path)?;
+    let db = context::open_db(&opts.store_path)?;
+    let reload = Arc::new(Notify::new());
+
+    let api = tokio::spawn(api::run(db.clone(), reload.clone(), opts.api_addr));
+    let compute = tokio::spawn(compute::run(db.clone(), reload.clone(), opts.http_addr));
+
+    let _ = tokio::try_join!(api, compute).expect("Tasks failed");
 
     Ok(())
 }

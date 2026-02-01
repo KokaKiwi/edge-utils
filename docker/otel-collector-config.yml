@@ -14,12 +14,8 @@ exporters:
     traces_table_name: otel_traces
     async_insert: true
 
-processors:
-  batch:
-
 service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
       exporters: [clickhouse]
