@@ -4020,6 +4020,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 [[package]]
 name = "viceroy-lib"
 version = "0.16.4"
+source = "git+https://github.com/KokaKiwi/Viceroy.git?branch=dev-server#e27a4b8b9e12367fb2cfc53d0e15d7a9f7ba8f1d"
 dependencies = [
  "anyhow",
  "async-trait",
