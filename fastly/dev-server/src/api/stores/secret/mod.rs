@@ -1,4 +1,4 @@
-use axum::extract::{Form, Json, Path, State};
+use axum::extract::{Json, Path, State};
 use chrono::{DateTime, Utc};
 use redb::{ReadableDatabase, ReadableTable};
 use serde::{Deserialize, Serialize};
@@ -66,7 +66,7 @@ pub struct CreateSecretStoreRequest {
 
 async fn create_secret_store(
     State(ctx): State<Context>,
-    Form(payload): Form<CreateSecretStoreRequest>,
+    Json(payload): Json<CreateSecretStoreRequest>,
 ) -> Result<Json<SecretStore>> {
     let tx = ctx.db.begin_write()?;
 

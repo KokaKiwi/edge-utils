@@ -41,6 +41,13 @@ const _: () = {
             self.status_code(http::StatusCode::NOT_FOUND)
         }
 
+        pub fn conflict(self) -> ErrorBuilder<SetStatusCode<S>>
+        where
+            S::StatusCode: IsUnset,
+        {
+            self.status_code(http::StatusCode::CONFLICT)
+        }
+
         #[allow(unused)]
         pub fn not_implemented(self) -> ErrorBuilder<SetMessage<SetStatusCode<S>>>
         where

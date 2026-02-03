@@ -128,8 +128,10 @@ Secret Stores hold encrypted secret values.
 # Create a secret store
 fastly secret-store create --name=my-secrets
 
-# Store a secret
-fastly secret-store-entry create --store-id=my-secrets --name=db-password --secret=super-secret-password
+# Store a secret (use curl since Fastly CLI won't work for this operation)
+curl -X POST http://127.0.0.1:7677/resources/stores/secret/<store-id>/secrets \
+  -H "Content-Type: application/json" \
+  -d '{"name":"db-password","secret":"super-secret-password"}'
 
 # List secrets (returns metadata only, not values)
 fastly secret-store-entry list --store-id=my-secrets
