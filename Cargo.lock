@@ -1128,12 +1128,15 @@ dependencies = [
  "clap",
  "headers",
  "http 1.4.0",
+ "http-body 0.4.6",
+ "http-body 1.0.1",
  "hyper 0.14.26",
  "miette",
  "opentelemetry",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions",
  "opentelemetry_sdk",
+ "pin-project",
  "redb",
  "serde",
  "serde_json",
@@ -4017,8 +4020,6 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 [[package]]
 name = "viceroy-lib"
 version = "0.16.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "038bdba16c9e0e42dae3a021caf0f4837b06c702a1727adcc152c7ce678f9c54"
 dependencies = [
  "anyhow",
  "async-trait",

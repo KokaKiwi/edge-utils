@@ -1,11 +1,12 @@
 use axum::extract::{Json, Path, State};
 use bytes::Bytes;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
+use headers::{HeaderMap, HeaderMapExt};
 use redb::{ReadableDatabase, ReadableTable};
 use serde::Serialize;
 
-use super::table::{KVStoreItemMetadata, TableDefinition};
 use crate::api::{Context, Result, Router, error::Error};
+use crate::tables::{KVStoreItemMetadata, KVStoreTable as TableDefinition};
 use crate::util::JsonRecord;
 
 pub fn router() -> Router {
@@ -21,17 +22,15 @@ pub fn router() -> Router {
         )
 }
 
-#[derive(Debug, Clone, Serialize)]
-struct KVKey {
-    key: String,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+#[derive(Debug, Clone, Default, Serialize)]
+struct KVKeyListResponse {
+    data: Vec<String>,
 }
 
 async fn list_kv_keys(
     Path(store_id): Path<String>,
     State(ctx): State<Context>,
-) -> Result<Json<Vec<KVKey>>> {
+) -> Result<Json<KVKeyListResponse>> {
     let tx = ctx.db.begin_read()?;
 
     let definition = TableDefinition::new(&store_id);
@@ -39,7 +38,7 @@ async fn list_kv_keys(
     let table = match tx.open_table(definition) {
         Ok(table) => table,
         Err(redb::TableError::TableDoesNotExist(_)) => {
-            return Ok(Json(vec![]));
+            return Ok(Json(KVKeyListResponse::default()));
         }
         Err(e) => return Err(e.into()),
     };
@@ -47,25 +46,18 @@ async fn list_kv_keys(
     let entries = table
         .iter()?
         .filter_map(|entry| entry.ok())
-        .map(|(key, record)| {
-            let item_key = key.value();
-            let item = record.value().0;
+        .map(|(key, _record)| key.value())
+        .collect::<Vec<String>>();
 
-            KVKey {
-                key: item_key,
-                created_at: item.created_at,
-                updated_at: item.updated_at,
-            }
-        })
-        .collect::<Vec<KVKey>>();
-
-    Ok(Json(entries))
+    Ok(Json(KVKeyListResponse { data: entries }))
 }
 
 async fn get_kv_item(
     Path((store_id, key)): Path<(String, String)>,
     State(ctx): State<Context>,
-) -> Result<Bytes> {
+) -> Result<(HeaderMap, Bytes)> {
+    use crate::api::util::Generation;
+
     let tx = ctx.db.begin_read()?;
 
     let definition = TableDefinition::new(&store_id);
@@ -92,13 +84,16 @@ async fn get_kv_item(
     };
     let item = record.value().0;
 
-    Ok(item.value)
+    let mut headers = HeaderMap::new();
+    headers.typed_insert(Generation(1));
+
+    Ok((headers, item.value))
 }
 
 async fn upsert_kv_item(
     Path((store_id, key)): Path<(String, String)>,
     State(ctx): State<Context>,
-    body: Bytes,
+    value: Bytes,
 ) -> Result<()> {
     let tx = ctx.db.begin_write()?;
 
@@ -110,7 +105,7 @@ async fn upsert_kv_item(
         let now = Utc::now();
 
         let meta = KVStoreItemMetadata {
-            value: body,
+            value,
             created_at: now,
             updated_at: now,
         };
@@ -119,7 +114,6 @@ async fn upsert_kv_item(
     }
 
     tx.commit()?;
-    ctx.reload.notify_one();
 
     Ok(())
 }
@@ -139,7 +133,6 @@ async fn delete_kv_item(
     }
 
     tx.commit()?;
-    ctx.reload.notify_one();
 
     Ok(())
 }

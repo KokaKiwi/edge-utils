@@ -27,12 +27,15 @@ clap = "4.5.56"
 fastly = "0.11.13"
 headers = "0.4.1"
 http = "1.4.0"
+http-body = "1.0.1"
+http-body-04 = { version = "0.4", package = "http-body" }
 hyper014 = { version = "0.14", package = "hyper" }
 miette = "7.6.0"
 opentelemetry = "0.31.0"
 opentelemetry_sdk = { version = "0.31.0", default-features = false }
 opentelemetry-otlp = "0.31.0"
 opentelemetry-semantic-conventions = "0.31.0"
+pin-project = "1.1.10"
 redb = "3.1.0"
 serde = "1.0.228"
 serde_json = "1.0.149"
@@ -46,6 +49,7 @@ tracing-log = "0.2.0"
 tracing-opentelemetry = "0.32.1"
 tracing-subscriber = "0.3.22"
 ulid = "1.2.1"
-viceroy-lib = "0.16.4"
+# viceroy-lib = { git = "https://github.com/KokaKiwi/Viceroy.git", branch = "dev-server" }
+viceroy-lib = { path = "../Viceroy" }
 
 fastly-opentelemetry = { path = "fastly/opentelemetry" }

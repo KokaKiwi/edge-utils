@@ -1,20 +1,14 @@
-use axum::extract::{Form, Json, Path, State};
+use axum::extract::{Json, Path, State};
 use chrono::{DateTime, Utc};
+use http::StatusCode;
 use redb::{ReadableDatabase, ReadableTable};
 use serde::{Deserialize, Serialize};
 
 use crate::api::{Context, Result, Router, error::Error};
+use crate::tables::{KVStoreMetadata, KVStoreTable, METADATA_TABLE};
 use crate::util::JsonRecord;
 
 mod keys;
-mod table;
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct KVStoreMetadata {
-    name: String,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
-}
 
 #[derive(Debug, Clone, Serialize)]
 struct KVStore {
@@ -34,18 +28,23 @@ pub fn router() -> Router {
         .merge(keys::router())
 }
 
-async fn list_kv_stores(State(ctx): State<Context>) -> Result<Json<Vec<KVStore>>> {
+#[derive(Debug, Clone, Default, Serialize)]
+struct KVStoreListResponse {
+    data: Vec<KVStore>,
+}
+
+async fn list_kv_stores(State(ctx): State<Context>) -> Result<Json<KVStoreListResponse>> {
     let tx = ctx.db.begin_read()?;
 
-    let metadata_table = match tx.open_table(super::METADATA_TABLE) {
+    let metadata_table = match tx.open_table(METADATA_TABLE) {
         Ok(table) => table,
         Err(redb::TableError::TableDoesNotExist(_)) => {
-            return Ok(Json(vec![]));
+            return Ok(Json(KVStoreListResponse::default()));
         }
         Err(e) => return Err(e.into()),
     };
     let Some(metadata_record) = metadata_table.get(&())? else {
-        return Ok(Json(vec![]));
+        return Ok(Json(KVStoreListResponse::default()));
     };
     let metadata = &metadata_record.value().0;
 
@@ -61,7 +60,7 @@ async fn list_kv_stores(State(ctx): State<Context>) -> Result<Json<Vec<KVStore>>
         })
         .collect::<Vec<KVStore>>();
 
-    Ok(Json(entries))
+    Ok(Json(KVStoreListResponse { data: entries }))
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -71,12 +70,12 @@ pub struct CreateKVStoreRequest {
 
 async fn create_kv_store(
     State(ctx): State<Context>,
-    Form(payload): Form<CreateKVStoreRequest>,
+    Json(payload): Json<CreateKVStoreRequest>,
 ) -> Result<Json<KVStore>> {
     let tx = ctx.db.begin_write()?;
 
     let store = {
-        let mut metadata_table = tx.open_table(super::METADATA_TABLE)?;
+        let mut metadata_table = tx.open_table(METADATA_TABLE)?;
         let mut metadata = metadata_table
             .get(&())?
             .map(|record| record.value().0.clone())
@@ -104,7 +103,6 @@ async fn create_kv_store(
     };
 
     tx.commit()?;
-    ctx.reload.notify_one();
 
     Ok(Json(store))
 }
@@ -115,7 +113,7 @@ async fn get_kv_store(
 ) -> Result<Json<KVStore>> {
     let tx = ctx.db.begin_read()?;
 
-    let metadata_table = match tx.open_table(super::METADATA_TABLE) {
+    let metadata_table = match tx.open_table(METADATA_TABLE) {
         Ok(table) => table,
         Err(redb::TableError::TableDoesNotExist(_)) => {
             return Err(Error::builder()
@@ -152,11 +150,11 @@ async fn get_kv_store(
     }))
 }
 
-async fn delete_kv_store(State(ctx): State<Context>, Path(id): Path<String>) -> Result<()> {
+async fn delete_kv_store(State(ctx): State<Context>, Path(id): Path<String>) -> Result<StatusCode> {
     let tx = ctx.db.begin_write()?;
 
     {
-        let mut metadata_table = tx.open_table(super::METADATA_TABLE)?;
+        let mut metadata_table = tx.open_table(METADATA_TABLE)?;
         let mut metadata = metadata_table
             .get(&())?
             .map(|record| record.value().0.clone())
@@ -172,10 +170,9 @@ async fn delete_kv_store(State(ctx): State<Context>, Path(id): Path<String>) -> 
         metadata_table.insert(&(), &JsonRecord(metadata))?;
     }
 
-    tx.delete_table(table::TableDefinition::new(&id))?;
+    tx.delete_table(KVStoreTable::new(&id))?;
 
     tx.commit()?;
-    ctx.reload.notify_one();
 
-    Ok(())
+    Ok(StatusCode::NO_CONTENT)
 }

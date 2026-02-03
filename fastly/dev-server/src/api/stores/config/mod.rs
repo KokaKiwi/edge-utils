@@ -4,17 +4,10 @@ use redb::{ReadableDatabase, ReadableTable};
 use serde::{Deserialize, Serialize};
 
 use crate::api::{Context, Result, Router, error::Error};
+use crate::tables::{ConfigStoreMetadata, ConfigStoreTable, METADATA_TABLE};
 use crate::util::JsonRecord;
 
 mod items;
-mod table;
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ConfigStoreMetadata {
-    name: String,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
-}
 
 #[derive(Debug, Clone, Serialize)]
 struct ConfigStore {
@@ -43,7 +36,7 @@ pub fn router() -> Router {
 async fn list_config_stores(State(ctx): State<Context>) -> Result<Json<Vec<ConfigStore>>> {
     let tx = ctx.db.begin_read()?;
 
-    let metadata_table = match tx.open_table(super::METADATA_TABLE) {
+    let metadata_table = match tx.open_table(METADATA_TABLE) {
         Ok(table) => table,
         Err(redb::TableError::TableDoesNotExist(_)) => {
             return Ok(Json(vec![]));
@@ -82,7 +75,7 @@ async fn create_config_store(
     let tx = ctx.db.begin_write()?;
 
     let store = {
-        let mut metadata_table = tx.open_table(super::METADATA_TABLE)?;
+        let mut metadata_table = tx.open_table(METADATA_TABLE)?;
         let mut metadata = metadata_table
             .get(&())?
             .map(|record| record.value().0.clone())
@@ -110,7 +103,6 @@ async fn create_config_store(
     };
 
     tx.commit()?;
-    ctx.reload.notify_one();
 
     Ok(Json(store))
 }
@@ -121,7 +113,7 @@ async fn get_config_store(
 ) -> Result<Json<ConfigStore>> {
     let tx = ctx.db.begin_read()?;
 
-    let metadata_table = match tx.open_table(super::METADATA_TABLE) {
+    let metadata_table = match tx.open_table(METADATA_TABLE) {
         Ok(table) => table,
         Err(redb::TableError::TableDoesNotExist(_)) => {
             return Err(Error::builder()
@@ -162,7 +154,7 @@ async fn delete_config_store(State(ctx): State<Context>, Path(id): Path<String>)
     let tx = ctx.db.begin_write()?;
 
     {
-        let mut metadata_table = tx.open_table(super::METADATA_TABLE)?;
+        let mut metadata_table = tx.open_table(METADATA_TABLE)?;
         let mut metadata = metadata_table
             .get(&())?
             .map(|record| record.value().0.clone())
@@ -178,10 +170,9 @@ async fn delete_config_store(State(ctx): State<Context>, Path(id): Path<String>)
         metadata_table.insert(&(), &JsonRecord(metadata))?;
     }
 
-    tx.delete_table(table::TableDefinition::new(&id))?;
+    tx.delete_table(ConfigStoreTable::new(&id))?;
 
     tx.commit()?;
-    ctx.reload.notify_one();
 
     Ok(())
 }

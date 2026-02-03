@@ -13,12 +13,15 @@ chrono = { workspace = true, features = ["serde"] }
 clap = { workspace = true, features = ["env"] }
 headers.workspace = true
 http.workspace = true
+http-body.workspace = true
+http-body-04.workspace = true
 hyper014.workspace = true
 miette = { workspace = true, features = ["fancy"] }
 opentelemetry.workspace = true
 opentelemetry_sdk.workspace = true
 opentelemetry-otlp = { workspace = true, features = ["http-proto", "reqwest-rustls", "gzip-http"] }
 opentelemetry-semantic-conventions.workspace = true
+pin-project.workspace = true
 redb = { workspace = true, features = ["logging"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true

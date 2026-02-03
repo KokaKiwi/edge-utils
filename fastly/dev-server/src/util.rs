@@ -23,7 +23,7 @@ impl<B> trace::MakeSpan<B> for OtelTrace {
             request.uri().path()
         };
 
-        tracing::info_span!(
+        tracing::debug_span!(
             "request",
             otel.name = format!("{} {path}", request.method()),
             otel.kind = "server",

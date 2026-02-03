@@ -1,6 +1,7 @@
 services:
   clickhouse:
     image: docker.io/clickhouse/clickhouse-server:latest-alpine
+    restart: unless-stopped
     ports:
       - 8123:8123/tcp
       - 9000:9000/tcp
@@ -17,6 +18,7 @@ services:
 
   ch-ui:
     image: ghcr.io/caioricciuti/ch-ui:latest
+    restart: unless-stopped
     ports:
       - 5521:5521/tcp
     environment:
@@ -27,6 +29,7 @@ services:
 
   otel-collector:
     image: docker.io/otel/opentelemetry-collector-contrib:latest
+    restart: unless-stopped
     depends_on:
       - clickhouse
     ports:
@@ -37,6 +40,7 @@ services:
 
   jaeger:
     image: cr.jaegertracing.io/jaegertracing/jaeger:2.14.0
+    restart: unless-stopped
     depends_on:
       - clickhouse
     ports:

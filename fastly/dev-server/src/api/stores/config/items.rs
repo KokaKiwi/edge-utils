@@ -3,8 +3,8 @@ use chrono::{DateTime, Utc};
 use redb::{ReadableDatabase, ReadableTable};
 use serde::{Deserialize, Serialize};
 
-use super::table::{ConfigStoreItemMetadata, TableDefinition};
 use crate::api::{Context, Result, Router, error::Error};
+use crate::tables::{ConfigStoreItemMetadata, ConfigStoreTable as TableDefinition};
 use crate::util::JsonRecord;
 
 pub fn router() -> Router {
@@ -108,7 +108,6 @@ async fn create_config_store_item(
     };
 
     tx.commit()?;
-    ctx.reload.notify_one();
 
     Ok(Json(item))
 }
@@ -194,7 +193,6 @@ async fn update_config_store_item(
     };
 
     tx.commit()?;
-    ctx.reload.notify_one();
 
     Ok(Json(item))
 }
@@ -214,7 +212,6 @@ async fn delete_config_store_item(
     }
 
     tx.commit()?;
-    ctx.reload.notify_one();
 
     Ok(Json(()))
 }

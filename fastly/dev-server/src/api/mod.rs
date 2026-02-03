@@ -2,24 +2,23 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use redb::Database;
-use tokio::sync::Notify;
 
 mod error;
 mod stores;
+mod util;
 
 #[derive(Clone)]
 struct Context {
     pub db: Arc<Database>,
-    pub reload: Arc<Notify>,
 }
 
 type Result<T> = std::result::Result<T, error::Error>;
 type Router = axum::Router<Context>;
 
-pub async fn run(db: Arc<Database>, reload: Arc<Notify>, listen_addr: SocketAddr) {
+pub async fn run(db: Arc<Database>, listen_addr: SocketAddr) {
     use tokio::net::TcpListener;
 
-    let ctx = Context { db, reload };
+    let ctx = Context { db };
 
     let app = router().with_state(ctx);
 

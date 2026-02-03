@@ -24,11 +24,18 @@ pub fn setup_tracing() -> TraceGuard {
 
     let (otel_layer, tracer_provider) = {
         use opentelemetry::trace::TracerProvider;
+        use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
         let tracer_provider = setup_otel_tracer_provider();
 
         let tracer = tracer_provider.tracer("fastly-dev-server");
         let layer = tracing_opentelemetry::layer().with_tracer(tracer);
+
+        let filter = EnvFilter::builder()
+            .with_default_directive(LevelFilter::DEBUG.into())
+            .parse("debug,fastly_dev_server=trace")
+            .unwrap();
+        let layer = layer.with_filter(filter);
 
         (layer, tracer_provider)
     };
