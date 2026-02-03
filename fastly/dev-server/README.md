@@ -69,14 +69,22 @@ The dev-server implements Fastly's store management API, allowing you to use the
 
 #### Configuring the Fastly CLI
 
-To point the Fastly CLI at your local dev-server, modify `~/.config/fastly/config.toml` and set the `api_endpoint` key inside the `[fastly]` section:
+To point the Fastly CLI at your local dev-server, you can use either an environment variable or a CLI flag:
 
-```toml
-[fastly]
-api_endpoint = "http://127.0.0.1:7677"
+**Option 1: Environment Variable (Recommended)**
+
+```bash
+export FASTLY_API_ENDPOINT=http://127.0.0.1:7677
+fastly config-store create --name=my-config
 ```
 
-This redirects all Fastly CLI store operations to your local dev-server instead of production Fastly infrastructure.
+**Option 2: CLI Flag**
+
+```bash
+fastly config-store create --name=my-config --api=http://127.0.0.1:7677
+```
+
+Both approaches redirect all Fastly CLI store operations to your local dev-server instead of production Fastly infrastructure.
 
 #### Config Stores
 
