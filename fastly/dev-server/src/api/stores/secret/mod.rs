@@ -31,18 +31,23 @@ pub fn router() -> Router {
         .merge(secrets::router())
 }
 
-async fn list_secret_stores(State(ctx): State<Context>) -> Result<Json<Vec<SecretStore>>> {
+#[derive(Debug, Clone, Default, Serialize)]
+struct SecretStoreList {
+    data: Vec<SecretStore>,
+}
+
+async fn list_secret_stores(State(ctx): State<Context>) -> Result<Json<SecretStoreList>> {
     let tx = ctx.db.begin_read()?;
 
     let metadata_table = match tx.open_table(METADATA_TABLE) {
         Ok(table) => table,
         Err(redb::TableError::TableDoesNotExist(_)) => {
-            return Ok(Json(vec![]));
+            return Ok(Json(SecretStoreList::default()));
         }
         Err(e) => return Err(e.into()),
     };
     let Some(metadata_record) = metadata_table.get(&())? else {
-        return Ok(Json(vec![]));
+        return Ok(Json(SecretStoreList::default()));
     };
     let metadata = &metadata_record.value().0;
 
@@ -56,7 +61,7 @@ async fn list_secret_stores(State(ctx): State<Context>) -> Result<Json<Vec<Secre
         })
         .collect::<Vec<SecretStore>>();
 
-    Ok(Json(entries))
+    Ok(Json(SecretStoreList { data: entries }))
 }
 
 #[derive(Debug, Clone, Deserialize)]
