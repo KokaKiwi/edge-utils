@@ -1,7 +1,9 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use miette::IntoDiagnostic;
 use redb::Database;
+use tokio_graceful_shutdown::SubsystemHandle;
 
 mod error;
 mod stores;
@@ -15,7 +17,11 @@ struct Context {
 type Result<T> = std::result::Result<T, error::Error>;
 type Router = axum::Router<Context>;
 
-pub async fn run(db: Arc<Database>, listen_addr: SocketAddr) {
+pub async fn run(
+    subsys: &mut SubsystemHandle,
+    db: Arc<Database>,
+    listen_addr: SocketAddr,
+) -> miette::Result<()> {
     use tokio::net::TcpListener;
 
     let ctx = Context { db };
@@ -27,10 +33,12 @@ pub async fn run(db: Arc<Database>, listen_addr: SocketAddr) {
         .expect("Failed to bind API server");
     tracing::info!("API server listening on {listen_addr}");
 
+    let cancel = subsys.create_cancellation_token();
+
     axum::serve(listener, app)
-        .with_graceful_shutdown(crate::util::shutdown_signal())
+        .with_graceful_shutdown(cancel.cancelled_owned())
         .await
-        .expect("API server failed");
+        .into_diagnostic()
 }
 
 fn router() -> Router {

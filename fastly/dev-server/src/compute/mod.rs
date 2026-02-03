@@ -2,14 +2,21 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use miette::IntoDiagnostic;
 use redb::Database;
+use tokio_graceful_shutdown::SubsystemHandle;
 use viceroy_lib::{ExecuteCtx, ProfilingStrategy};
 
 mod compat;
 mod stores;
 mod util;
 
-pub async fn run(db: Arc<Database>, module_path: PathBuf, listen_addr: SocketAddr) {
+pub async fn run(
+    subsys: &mut SubsystemHandle,
+    db: Arc<Database>,
+    module_path: PathBuf,
+    listen_addr: SocketAddr,
+) -> miette::Result<()> {
     use axum::serve::IncomingStream;
     use tokio::net::TcpListener;
 
@@ -21,7 +28,7 @@ pub async fn run(db: Arc<Database>, module_path: PathBuf, listen_addr: SocketAdd
         Default::default(),
         false,
     )
-    .expect("Failed to build execution context")
+    .into_diagnostic()?
     .finish();
 
     let make_service = tower::service_fn(move |stream: IncomingStream<TcpListener>| {
@@ -65,13 +72,13 @@ pub async fn run(db: Arc<Database>, module_path: PathBuf, listen_addr: SocketAdd
         }
     });
 
-    let listener = TcpListener::bind(listen_addr)
-        .await
-        .expect("Failed to bind Compute server");
+    let listener = TcpListener::bind(listen_addr).await.into_diagnostic()?;
     tracing::info!("Compute server listening on {listen_addr}");
 
+    let cancel = subsys.create_cancellation_token();
+
     axum::serve(listener, make_service)
-        .with_graceful_shutdown(crate::util::shutdown_signal())
+        .with_graceful_shutdown(cancel.cancelled_owned())
         .await
-        .expect("Compute server failed");
+        .into_diagnostic()
 }

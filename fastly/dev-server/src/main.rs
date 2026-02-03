@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 
 use clap::Parser;
-use miette::Result;
+use miette::{IntoDiagnostic, Result};
 
 mod api;
 mod compute;
@@ -30,20 +30,38 @@ struct Options {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    use std::time::Duration;
+
+    use tokio_graceful_shutdown::{SubsystemBuilder, SubsystemHandle, Toplevel};
+
     let opts = Options::parse();
 
     let _guard = trace::setup_tracing();
 
     let db = context::open_db(&opts.store_path)?;
 
-    let api = tokio::spawn(api::run(db.clone(), opts.api_addr));
-    let compute = tokio::spawn(compute::run(
-        db.clone(),
-        opts.file.to_path_buf(),
-        opts.http_addr,
-    ));
+    Toplevel::new(async move |s: &mut SubsystemHandle| {
+        let api_subsys = SubsystemBuilder::new("api", {
+            let db = db.clone();
+            let listen_addr = opts.api_addr;
 
-    let _ = tokio::try_join!(api, compute).expect("Tasks failed");
+            async move |subsys: &mut SubsystemHandle| api::run(subsys, db, listen_addr).await
+        });
+        s.start(api_subsys);
 
-    Ok(())
+        let compute_subsys = SubsystemBuilder::new("compute", {
+            let db = db.clone();
+            let module_path = opts.file.to_path_buf();
+            let listen_addr = opts.http_addr;
+
+            async move |subsys: &mut SubsystemHandle| {
+                compute::run(subsys, db, module_path, listen_addr).await
+            }
+        });
+        s.start(compute_subsys);
+    })
+    .catch_signals()
+    .handle_shutdown_requests(Duration::from_millis(1000))
+    .await
+    .into_diagnostic()
 }

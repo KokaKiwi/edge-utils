@@ -6,10 +6,6 @@ use serde::{de::DeserializeOwned, ser::Serialize};
 use tower_http::trace;
 use tracing::field;
 
-pub async fn shutdown_signal() {
-    let _ = tokio::signal::ctrl_c().await;
-}
-
 #[derive(Debug, Clone, Copy)]
 pub struct OtelTrace;
 
