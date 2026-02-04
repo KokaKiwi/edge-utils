@@ -36,9 +36,9 @@ cargo build --target wasm32-wasip1 --release
 
 # Then run the dev server
 cd ../..
-cargo run -p fastly-dev-server -- target/wasm32-wasip1/release/fastly-demo-server.wasm
+cargo run -p fastly-dev-server -- run target/wasm32-wasip1/release/fastly-demo-server.wasm
 # Or using the built binary (at target/release/fastly-dev-server)
-fastly-dev-server target/wasm32-wasip1/release/fastly-demo-server.wasm
+fastly-dev-server run target/wasm32-wasip1/release/fastly-demo-server.wasm
 ```
 
 Your Compute application will be available at `http://127.0.0.1:7676`
@@ -49,17 +49,58 @@ The management API will be available at `http://127.0.0.1:7677`
 ### Command Line Options
 
 ```bash
-fastly-dev-server [OPTIONS] <WASM_PATH>
+fastly-dev-server [OPTIONS] <COMMAND>
 
-Arguments:
-  <WASM_PATH>  Path to the WebAssembly module
+Commands:
+  run   Run the Fastly dev server
+  help  Print this message or the help of the given subcommand(s)
 
 Options:
-      --store-path <PATH>    Database file path [default: ./fastly-dev-store.db]
-      --http-addr <ADDR>     Compute HTTP server address [default: 127.0.0.1:7676]
-      --api-addr <ADDR>      API server address [default: 127.0.0.1:7677]
-  -h, --help                 Print help
+      --store-path <PATH>  Path to the persistent store [default: ./fastly-dev-store.db]
+  -h, --help               Print help
 ```
+
+#### Running the Server
+
+```bash
+fastly-dev-server run [OPTIONS] <FILE>
+
+Arguments:
+  <FILE>  Path to the Wasm file to run
+
+Options:
+      --http-addr <ADDR>  Address to bind the HTTP server to [default: 127.0.0.1:7676]
+      --api-addr <ADDR>   Address to bind the API server to [default: 127.0.0.1:7677]
+  -h, --help              Print help
+```
+
+#### Examples
+
+```bash
+# Run with default settings
+fastly-dev-server run my-app.wasm
+
+# Use a custom database location
+fastly-dev-server --store-path /tmp/my-store.db run my-app.wasm
+
+# Customize server addresses
+fastly-dev-server run my-app.wasm --http-addr 0.0.0.0:8080 --api-addr 0.0.0.0:8081
+
+# Use environment variable for store path
+FASTLY_DEV_SERVER_STORE_PATH=/tmp/my-store.db fastly-dev-server run my-app.wasm
+```
+
+### Environment Variables
+
+The dev-server supports configuration via environment variables as an alternative to command-line flags:
+
+| Environment Variable | Description | Default |
+|---------------------|-------------|---------|
+| `FASTLY_DEV_SERVER_STORE_PATH` | Path to the persistent store database file | `./fastly-dev-store.db` |
+| `FASTLY_DEV_SERVER_HTTP_ADDR` | Address to bind the HTTP server to | `127.0.0.1:7676` |
+| `FASTLY_DEV_SERVER_API_ADDR` | Address to bind the API server to | `127.0.0.1:7677` |
+
+Environment variables can be combined with command-line flags. When both are provided, command-line flags take precedence.
 
 ### Managing Stores via Fastly CLI
 
