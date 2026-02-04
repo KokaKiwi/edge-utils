@@ -12,8 +12,6 @@ A local development server that emulates the Fastly Compute environment, providi
 - **Persistent Storage**: All stores (Config, KV, Secret) are persisted using [redb](https://github.com/cberner/redb)
 - **REST API**: Manage stores through a comprehensive REST API
 - **OpenTelemetry Integration**: Built-in distributed tracing with OTLP export
-- **Docker Compose Stack**: Complete observability setup with ClickHouse and Jaeger
-- **Per-Request Isolation**: Each request gets a fresh Viceroy instance with stores loaded from the database
 
 ## Quick Start
 
