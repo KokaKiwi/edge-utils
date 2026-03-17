@@ -1,0 +1,6 @@
+manifest_version = 3
+name = "demo-server"
+language = "rust"
+
+[scripts]
+build = "cargo build --release --target wasm32-wasip1"
