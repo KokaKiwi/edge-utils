@@ -36,11 +36,13 @@ impl Reactor {
     /// Block until one handle is ready, fire its waker, return true.
     /// Returns false immediately if no handles are registered.
     pub fn wait(&mut self) -> bool {
+        use fastly_shared::FastlyStatus;
+
         if self.handles.is_empty() {
             return false;
         }
 
-        let mut done_index: u32 = 0;
+        let mut done_index: u32 = u32::MAX;
 
         // SAFETY: handles is a valid Vec<u32>, done_index is stack-allocated.
         // fastly_async_io::select blocks until one handle is ready.
@@ -52,7 +54,7 @@ impl Reactor {
                 &raw mut done_index,
             )
         };
-        assert_eq!(status, fastly_shared::FastlyStatus::OK, "select failed");
+        assert_eq!(status, FastlyStatus::OK, "select failed");
 
         let ready_handle = self.handles.swap_remove(done_index as usize);
         if let Some(waker) = self.registry.remove(&ready_handle) {
