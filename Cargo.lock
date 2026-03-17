@@ -151,7 +151,6 @@ dependencies = [
  "fastly-async-macros",
  "fastly-shared",
  "fastly-sys",
- "futures",
 ]
 
 [[package]]
