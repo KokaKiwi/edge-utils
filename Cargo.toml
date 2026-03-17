@@ -19,11 +19,12 @@ async-task = "4"
 fastly = "0.11.13"
 fastly-shared = "0.11.13"
 fastly-sys = "0.11.13"
-tracing = "0.1.44"
-
+futures = "0.3.32"
+http = "1.4.0"
 proc-macro2 = "1"
 quote = "1"
 syn = "2"
+tracing = "0.1.44"
 
 fastly-async = { path = "fastly/async" }
 fastly-async-macros = { path = "fastly/async-macros" }

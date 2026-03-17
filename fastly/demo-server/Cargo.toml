@@ -6,5 +6,6 @@ license.workspace = true
 
 [dependencies]
 fastly.workspace = true
+futures.workspace = true
 
 fastly-async = { workspace = true, features = ["macros"] }

@@ -24,6 +24,15 @@ impl Reactor {
         }
     }
 
+    /// Deregister a handle (e.g. when the future is dropped before completion).
+    pub fn unregister(&mut self, handle: u32) {
+        if self.registry.remove(&handle).is_some()
+            && let Some(pos) = self.handles.iter().position(|&h| h == handle)
+        {
+            self.handles.swap_remove(pos);
+        }
+    }
+
     /// Block until one handle is ready, fire its waker, return true.
     /// Returns false immediately if no handles are registered.
     pub fn wait(&mut self) -> bool {

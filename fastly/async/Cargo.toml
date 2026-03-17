@@ -9,6 +9,7 @@ async-task.workspace = true
 fastly.workspace = true
 fastly-shared.workspace = true
 fastly-sys.workspace = true
+futures.workspace = true
 
 fastly-async-macros = { workspace = true, optional = true }
 

@@ -4,3 +4,6 @@ language = "rust"
 
 [scripts]
 build = "cargo build --release --target wasm32-wasip1"
+
+[local_server.backends.httpbin]
+url = "https://httpbin.org"
