@@ -7,4 +7,4 @@ license.workspace = true
 [dependencies]
 fastly.workspace = true
 
-fastly-reactor = { workspace = true, features = ["macros"] }
+fastly-async = { workspace = true, features = ["macros"] }

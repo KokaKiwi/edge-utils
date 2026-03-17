@@ -1,7 +1,14 @@
 [workspace]
 resolver = "3"
-members = ["fastly/reactor", "fastly/reactor-macros", "fastly/demo-server"]
-default-members = ["fastly/reactor", "fastly/reactor-macros"]
+members = [
+    "fastly/async-macros",
+    "fastly/async",
+    "fastly/demo-server",
+]
+default-members = [
+    "fastly/async-macros",
+    "fastly/async",
+]
 
 [workspace.package]
 edition = "2024"
@@ -18,5 +25,5 @@ proc-macro2 = "1"
 quote = "1"
 syn = "2"
 
-fastly-reactor = { path = "fastly/reactor" }
-fastly-reactor-macros = { path = "fastly/reactor-macros" }
+fastly-async = { path = "fastly/async" }
+fastly-async-macros = { path = "fastly/async-macros" }

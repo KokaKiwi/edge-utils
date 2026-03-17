@@ -6,10 +6,7 @@ use std::task::{Context, Poll, Waker};
 
 use async_task::{Runnable, Task};
 
-#[cfg(feature = "macros")]
-pub use fastly_reactor_macros::main;
-
-pub use reactor::with_reactor;
+pub use reactor::{Reactor, with_reactor};
 
 mod reactor;
 
@@ -37,8 +34,7 @@ pub fn block_on<F: Future + 'static>(fut: F) -> F::Output
 where
     F::Output: 'static,
 {
-    let (runnable, task) = async_task::spawn_local(fut, schedule);
-    schedule(runnable);
+    let task = spawn(fut);
     let mut task = pin!(task);
 
     loop {
@@ -61,7 +57,7 @@ where
         }
 
         // Phase 3: block on I/O reactor — wakes a registered future
-        let had_handles = reactor::with_reactor(|r| r.wait());
+        let had_handles = with_reactor(|r| r.wait());
         if !had_handles {
             panic!("block_on: deadlock — no runnables and no I/O handles registered");
         }

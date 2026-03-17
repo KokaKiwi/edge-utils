@@ -143,11 +143,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "fastly-async"
+version = "0.1.0"
+dependencies = [
+ "async-task",
+ "fastly",
+ "fastly-async-macros",
+ "fastly-shared",
+ "fastly-sys",
+]
+
+[[package]]
+name = "fastly-async-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "fastly-demo-server"
 version = "0.1.0"
 dependencies = [
  "fastly",
- "fastly-reactor",
+ "fastly-async",
 ]
 
 [[package]]
@@ -159,26 +179,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "fastly-reactor"
-version = "0.1.0"
-dependencies = [
- "async-task",
- "fastly",
- "fastly-reactor-macros",
- "fastly-shared",
- "fastly-sys",
-]
-
-[[package]]
-name = "fastly-reactor-macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
 ]
 
 [[package]]

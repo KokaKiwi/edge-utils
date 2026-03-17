@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::task::Waker;
 
+#[derive(Debug, Default)]
 pub struct Reactor {
     /// Maps handle value → waker to fire when ready
     registry: HashMap<u32, Waker>,
@@ -11,10 +12,7 @@ pub struct Reactor {
 
 impl Reactor {
     pub fn new() -> Self {
-        Self {
-            registry: HashMap::new(),
-            handles: Vec::new(),
-        }
+        Self::default()
     }
 
     /// Register or update the waker for a handle.

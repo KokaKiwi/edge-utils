@@ -6,7 +6,7 @@ use proc_macro2::Span;
 /// # Example
 ///
 /// ```rust,ignore
-/// #[fastly_reactor::main]
+/// #[fastly_async::main]
 /// async fn main(req: Request) -> Response {
 ///     // handle request
 /// }
@@ -39,7 +39,7 @@ pub fn main(_attr: TokenStream, item: TokenStream) -> TokenStream {
             async fn #fn_name(#fn_inputs) #fn_output #fn_block
 
             let req = ::fastly::Request::from_client();
-            let resp = ::fastly_reactor::block_on(#fn_name(req));
+            let resp = ::fastly_async::task::block_on(#fn_name(req));
             resp.send_to_client();
         }
     }
