@@ -7,12 +7,6 @@ license.workspace = true
 [dependencies]
 fastly.workspace = true
 futures.workspace = true
-opentelemetry.workspace = true
-opentelemetry_sdk = { workspace = true, features = ["trace"] }
-opentelemetry-otlp = { workspace = true, features = ["trace", "http-proto"] }
 tracing.workspace = true
-tracing-opentelemetry.workspace = true
-tracing-subscriber.workspace = true
 
 fastly-async = { workspace = true, features = ["macros"] }
-fastly-opentelemetry.workspace = true

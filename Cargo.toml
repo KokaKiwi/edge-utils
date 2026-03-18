@@ -4,12 +4,10 @@ members = [
     "fastly/async-macros",
     "fastly/async",
     "fastly/demo-server",
-    "fastly/opentelemetry",
 ]
 default-members = [
     "fastly/async-macros",
     "fastly/async",
-    "fastly/opentelemetry",
 ]
 
 [workspace.package]
@@ -25,18 +23,11 @@ fastly-shared = "0.11.13"
 fastly-sys = "0.11.13"
 futures = "0.3.32"
 http = "1.4.0"
-opentelemetry = "0.31.0"
-opentelemetry_sdk = "0.31.0"
-opentelemetry-http = "0.31.0"
-opentelemetry-otlp = { version = "0.31.0", default-features = false }
 ordermap = "1.1.0"
 proc-macro2 = "1"
 quote = "1"
 syn = "2"
 tracing = "0.1.44"
-tracing-opentelemetry = "0.32.1"
-tracing-subscriber = "0.3.23"
 
 fastly-async = { path = "fastly/async" }
 fastly-async-macros = { path = "fastly/async-macros" }
-fastly-opentelemetry = { path = "fastly/opentelemetry" }
