@@ -11,6 +11,10 @@ impl HttpClient for FastlyHttpClient {
         _req: http::Request<Bytes>,
     ) -> Result<http::Response<Bytes>, HttpError> {
         // Implement the logic to send the request using Fastly's HTTP client
-        unimplemented!()
+        // unimplemented!()
+        Ok(http::Response::builder()
+            .status(200)
+            .body(Bytes::new())
+            .unwrap())
     }
 }

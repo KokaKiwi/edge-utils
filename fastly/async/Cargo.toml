@@ -7,10 +7,9 @@ license.workspace = true
 [dependencies]
 async-task.workspace = true
 fastly.workspace = true
-fastly-shared.workspace = true
-fastly-sys.workspace = true
 
 fastly-async-macros = { workspace = true, optional = true }
+ordermap.workspace = true
 
 [features]
 macros = ["dep:fastly-async-macros"]

@@ -2,12 +2,16 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::task::Waker;
 
-#[derive(Debug, Default)]
+use fastly::handle::{BodyHandle, PendingRequestHandle, ResponseHandle, select_handles};
+use fastly::http::request::SendErrorCause;
+use ordermap::OrderMap;
+
+#[derive(Default)]
 pub struct Reactor {
-    /// Maps handle value → waker to fire when ready
-    registry: HashMap<u32, Waker>,
-    /// Parallel vec of handles for passing to fastly_async_io::select
-    handles: Vec<u32>,
+    /// Wakers for pending handles, keyed by handle id.
+    entries: OrderMap<u32, Waker>,
+    /// Results for completed handles, keyed by handle id.
+    results: HashMap<u32, Result<(ResponseHandle, BodyHandle), SendErrorCause>>,
 }
 
 impl Reactor {
@@ -15,51 +19,51 @@ impl Reactor {
         Self::default()
     }
 
-    /// Register or update the waker for a handle.
-    /// If already registered, the waker is replaced (always update).
-    pub fn register(&mut self, handle: u32, waker: Waker) {
-        if self.registry.insert(handle, waker).is_none() {
-            // Only push to handles vec on first registration
-            self.handles.push(handle);
-        }
+    /// Register a pending handle id with the reactor, or refresh its waker if already present.
+    pub fn register_pending_request(&mut self, handle: &PendingRequestHandle, waker: Waker) {
+        #[cfg_attr(not(target_env = "p1"), allow(deprecated))]
+        let handle_id = handle.as_u32();
+        self.entries.insert(handle_id, waker);
     }
 
-    /// Deregister a handle (e.g. when the future is dropped before completion).
-    pub fn unregister(&mut self, handle: u32) {
-        if self.registry.remove(&handle).is_some()
-            && let Some(pos) = self.handles.iter().position(|&h| h == handle)
-        {
-            self.handles.swap_remove(pos);
-        }
+    /// Deregister a handle by id (e.g. when the future is dropped before completion).
+    pub fn unregister_pending_request(&mut self, handle: &PendingRequestHandle) {
+        #[cfg_attr(not(target_env = "p1"), allow(deprecated))]
+        let handle_id = handle.as_u32();
+        self.entries.swap_remove(&handle_id);
+        self.results.remove(&handle_id);
     }
 
-    /// Block until one handle is ready, fire its waker, return true.
+    /// Take the stored result for a completed handle.
+    pub fn take_result(
+        &mut self,
+        handle: &PendingRequestHandle,
+    ) -> Option<Result<(ResponseHandle, BodyHandle), SendErrorCause>> {
+        #[cfg_attr(not(target_env = "p1"), allow(deprecated))]
+        let handle_id = handle.as_u32();
+        self.results.remove(&handle_id)
+    }
+
+    /// Block until one handle is ready, store its result, fire its waker, return true.
     /// Returns false immediately if no handles are registered.
     pub fn wait(&mut self) -> bool {
-        use fastly_shared::FastlyStatus;
-
-        if self.handles.is_empty() {
+        if self.entries.is_empty() {
             return false;
         }
 
-        let mut done_index: u32 = u32::MAX;
+        let handles: Vec<PendingRequestHandle> = self
+            .entries
+            .keys()
+            .copied()
+            .map(PendingRequestHandle::from_u32)
+            .collect();
 
-        // SAFETY: handles is a valid Vec<u32>, done_index is stack-allocated.
-        // fastly_async_io::select blocks until one handle is ready.
-        let status = unsafe {
-            fastly_sys::fastly_async_io::select(
-                self.handles.as_ptr(),
-                self.handles.len(),
-                0, // timeout_ms = 0 means no timeout (block indefinitely)
-                &raw mut done_index,
-            )
-        };
-        assert_eq!(status, FastlyStatus::OK, "select failed");
+        let (result, ready_index, _remaining) = select_handles(handles);
+        let (ready_id, ready_waker) = self.entries.remove_index(ready_index).unwrap();
 
-        let ready_handle = self.handles.swap_remove(done_index as usize);
-        if let Some(waker) = self.registry.remove(&ready_handle) {
-            waker.wake();
-        }
+        // Store the result and wake the corresponding future.
+        self.results.insert(ready_id, result);
+        ready_waker.wake();
 
         true
     }

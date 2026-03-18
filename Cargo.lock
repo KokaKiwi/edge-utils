@@ -187,8 +187,7 @@ dependencies = [
  "async-task",
  "fastly",
  "fastly-async-macros",
- "fastly-shared",
- "fastly-sys",
+ "ordermap",
 ]
 
 [[package]]
@@ -711,6 +710,15 @@ dependencies = [
  "percent-encoding",
  "rand",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "ordermap"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfa78c92071bbd3628c22b1a964f7e0eb201dc1456555db072beb1662ecd6715"
+dependencies = [
+ "indexmap",
 ]
 
 [[package]]
